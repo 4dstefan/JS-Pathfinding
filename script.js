@@ -71,20 +71,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('pixelCanvas');
     const ctx = canvas.getContext('2d');
     
-    // Set initial white background
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Set default drawing color to black
     ctx.fillStyle = 'black';
     
-    // Pixel size (1x1 for true pixel art)
     const pixelSize = 8;
     
     const gridPixelWidth = canvas.width / pixelSize;
     
     // initialize graph
-    let graph = Array(gridPixelWidth) // do a matrix instead
+    let graph = Array(gridPixelWidth) 
     for (let i = 0; i < gridPixelWidth; i++) {
         graph[i] = Array(gridPixelWidth)
     }
@@ -122,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const rect = canvas.getBoundingClientRect();
     
-    // Track mouse state
     let isDrawing = false;
     
     document.addEventListener('mousedown', displayCoords);
@@ -143,7 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
     }
     
-    // Handle mouse down
     canvas.addEventListener('mousedown', function(e) {
         if (e.ctrlKey) {
             let x = Math.floor((e.clientX - rect.left) / pixelSize);
@@ -191,11 +186,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         ctx.fillStyle = 'white';
         
-        // Draw the pixel
         ctx.fillRect(x, y, pixelSize, pixelSize);
     }
     
-    // Function to draw a pixel at mouse position
     function drawPixel(e) {
         // Get mouse position relative to canvas
         const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
@@ -206,10 +199,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         graph[graphx][graphy].removed = true;
         
-        // Toggle between black and white
         ctx.fillStyle = 'black';
         
-        // Draw the pixel
         ctx.fillRect(x, y, pixelSize, pixelSize);
     }
 });
