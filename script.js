@@ -73,39 +73,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     ctx.fillStyle = 'black';
     
-    const pixelSize = 8;
+    let pixelSize = 8;
     
-    const gridPixelWidth = canvas.width / pixelSize;
+    const rect = canvas.getBoundingClientRect();
     
-    // initialize graph
-    let graph = Array(gridPixelWidth) 
-    for (let i = 0; i < gridPixelWidth; i++) {
-        graph[i] = Array(gridPixelWidth)
-    }
+    let graph = createGraph(pixelSize);
+
+    let isDrawing = false;
     
-    for (let i = 0; i < gridPixelWidth; i++) {
-        for (let j = 0; j < gridPixelWidth; j++) {
-            const value = Array(2);
-            value[0] = i;
-            value[1] = j;
-            
-            const vertex = new Vertex(value);
-            graph[i][j] = vertex;
-        }
-    }
+    document.addEventListener('mousedown', displayCoords);
     
-    
-    for (let i = 0; i < gridPixelWidth-1; i++) {
-        for (let j = 0; j < gridPixelWidth-1; j++) {
-            let n1 = graph[i][j+1];
-            let n2 = graph[i+1][j];
-            graph[i][j].addNeighbour(n1);
-            graph[i][j].addNeighbour(n2);
-        }
-    }
     
     
     function drawPath(x, y) {
@@ -117,15 +96,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const rect = canvas.getBoundingClientRect();
+    function createGraph(pixelSize) {
+        let gridPixelWidth = canvas.width / pixelSize;
+        let newGraph = Array(gridPixelWidth);
+        for (let i = 0; i < gridPixelWidth; i++) {
+            newGraph[i] = Array(gridPixelWidth)
+        }
+        
+        for (let i = 0; i < gridPixelWidth; i++) {
+            for (let j = 0; j < gridPixelWidth; j++) {
+                const value = Array(2);
+                value[0] = i;
+                value[1] = j;
+                
+                const vertex = new Vertex(value);
+                newGraph[i][j] = vertex;
+            }
+        }
+        
+        
+        for (let i = 0; i < gridPixelWidth-1; i++) {
+            for (let j = 0; j < gridPixelWidth-1; j++) {
+                let n1 = newGraph[i][j+1];
+                let n2 = newGraph[i+1][j];
+                newGraph[i][j].addNeighbour(n1);
+                newGraph[i][j].addNeighbour(n2);
+            }
+        }
+
+        return newGraph;
+    }
     
-    let isDrawing = false;
-    
-    document.addEventListener('mousedown', displayCoords);
     
     function displayCoords(e) {
-        const rect = canvas.getBoundingClientRect();
-        testText.innerHTML = Math.floor((e.clientX - rect.left) / pixelSize) + " " + Math.floor((e.clientY - rect.top) / pixelSize);
+        testText.innerHTML = getCellPosX(e) + " " + getCellPosY(e);
+
     }
     
     function resetCanvas() {
@@ -137,12 +142,22 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
+        var pixelSizeInput = document.getElementById("pixelSize");
+        let newPixelSize = pixelSizeInput.value
+        // console.log(pixelSizeInput.value)
+        
+        if (newPixelSize) {
+            pixelSize = newPixelSize;
+            graph = createGraph(pixelSize);
+        }
+        pixelSizeInput.value = null;
+        
     }
     
     canvas.addEventListener('mousedown', function(e) {
         if (e.ctrlKey) {
-            let x = Math.floor((e.clientX - rect.left) / pixelSize);
-            let y = Math.floor((e.clientY - rect.top) / pixelSize);
+            let x = getCellPosX(e);
+            let y = getCellPosY(e);
             drawPath(x, y);
         }
         else if (e.altKey) {
@@ -151,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         else {
             isDrawing = true;
-            drawPixel(e);
+            drawWallAtMouse(e);
         }
     });
     
@@ -161,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
             removePixel(e)
         }
         else if (isDrawing) {
-            drawPixel(e);
+            drawWallAtMouse(e);
         }
     });
     
@@ -176,11 +191,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function removePixel(e) {
-        const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
-        const y = Math.floor((e.clientY - rect.top) / pixelSize) * pixelSize;
+        const x = getCellPosX(e) * pixelSize;
+        const y = getCellPosY(e) * pixelSize;
         
-        let graphx = Math.floor((e.clientX - rect.left) / pixelSize);
-        let graphy = Math.floor((e.clientY - rect.top) / pixelSize);
+        let graphx = getCellPosX(e);
+        let graphy = getCellPosY(e);
         
         graph[graphx][graphy].removed = false;
         
@@ -188,19 +203,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         ctx.fillRect(x, y, pixelSize, pixelSize);
     }
-    
-    function drawPixel(e) {
-        // Get mouse position relative to canvas
-        const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
-        const y = Math.floor((e.clientY - rect.top) / pixelSize) * pixelSize;
-        
-        let graphx = Math.floor((e.clientX - rect.left) / pixelSize);
-        let graphy = Math.floor((e.clientY - rect.top) / pixelSize);
-        
-        graph[graphx][graphy].removed = true;
+
+    function getCellPosX(e) {
+        return Math.floor((e.clientX - rect.left) / pixelSize);
+    }
+
+    function getCellPosY(e) {
+        return Math.floor((e.clientY - rect.top) / pixelSize);
+    }
+
+    function addWall(x, y) {
+        graph[x][y].removed = true;
         
         ctx.fillStyle = 'black';
+        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+    }
+    
+    function drawWallAtMouse(e) {
+        const cellPositionX = getCellPosX(e);
+        const cellPositionY =  getCellPosY(e);
+
+        addWall(cellPositionX, cellPositionY);
         
-        ctx.fillRect(x, y, pixelSize, pixelSize);
     }
 });
