@@ -31,14 +31,17 @@ function getPath(target) {
     return path;
 }
 
-function bfs(graph, start) {
+function resetGraph(graph) {
     graph.forEach(row => {
-        // reset
         row.forEach(vertex => {
             vertex.visited = false;
             vertex.previous = -1;
         });
     });
+}
+
+function bfs(graph, start) {
+    resetGraph(graph)
     
     let queue = [];
     
@@ -60,6 +63,10 @@ function bfs(graph, start) {
         });
     }
     return path
+}
+
+function randomDFS(graph, start) {
+    resetGraph(graph)
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -115,12 +122,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         
-        for (let i = 0; i < gridPixelWidth-1; i++) {
-            for (let j = 0; j < gridPixelWidth-1; j++) {
-                let n1 = newGraph[i][j+1];
-                let n2 = newGraph[i+1][j];
-                newGraph[i][j].addNeighbour(n1);
-                newGraph[i][j].addNeighbour(n2);
+        for (let i = 0; i < gridPixelWidth; i++) {
+            for (let j = 0; j < gridPixelWidth; j++) {
+                if (j+1 < gridPixelWidth){
+                    let n1 = newGraph[i][j+1];
+                    newGraph[i][j].addNeighbour(n1);
+                }
+
+                if (i+1 < gridPixelWidth) {
+                    let n2 = newGraph[i+1][j];
+                    newGraph[i][j].addNeighbour(n2);
+                }
             }
         }
 
