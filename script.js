@@ -31,7 +31,7 @@ function getPath(target) {
     return path;
 }
 
-function resetGraph(graph) {
+function resetGraph(graph, walls=false) {
     graph.forEach(row => {
         row.forEach(vertex => {
             vertex.visited = false;
@@ -65,8 +65,48 @@ function bfs(graph, start) {
     return path
 }
 
+function getUnvisitedNeighbours(vertex) {
+    let unvisitedNeighboursArray = [];
+    vertex.getNeighbours().forEach(neighbour => {
+        if (!neighbour.visited) {
+            unvisitedNeighboursArray.push(neighbour);
+        }
+    });
+
+    return unvisitedNeighboursArray;
+}
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function randomDFS(graph, start) {
-    resetGraph(graph)
+    resetGraph(graph) // you have to make it all walls
+
+    let stack = [];
+    
+    start.visited = true;
+    stack.push(start);
+
+    let path = [];
+
+    while (stack.length != 0) {
+        let current = stack.pop();
+
+        let unvisitedNeighbours = getUnvisitedNeighbours(current);
+        if (unvisitedNeighbours.length > 0) {
+            stack.push(current);
+            randNeighbour = unvisitedNeighbours[getRandomInt(0, unvisitedNeighbours.length-1)]
+            path.push(current)
+            path.push(randNeighbour)
+            randNeighbour.visited = true;
+            stack.push(randNeighbour);
+        }
+    }
+
+    return path;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -88,10 +128,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let graph = createGraph(pixelSize);
 
+    mazeWalls = randomDFS(graph, graph[0][0]);
+
+    mazeWalls.forEach(cell => {
+        addWall(cell.value[0], cell.value[1])
+    }); // FIX THIS LATER. SHOULD NOT BE WALLS, BUT PATH
+
     let isDrawing = false;
     
     document.addEventListener('mousedown', displayCoords);
-    
     
     
     function drawPath(x, y) {
@@ -139,24 +184,14 @@ document.addEventListener('DOMContentLoaded', function() {
         return newGraph;
     }
     
-    
-    function displayCoords(e) {
-        testText.innerHTML = getCellPosX(e) + " " + getCellPosY(e);
 
-    }
-    
     function resetCanvas() {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        graph.forEach(row => {
-            row.forEach(vertex => {
-                vertex.removed = false;
-            });
-        });
+        resetGraph(graph);
         
         var pixelSizeInput = document.getElementById("pixelSize");
         let newPixelSize = pixelSizeInput.value
-        // console.log(pixelSizeInput.value)
         
         if (newPixelSize) {
             pixelSize = newPixelSize;
@@ -166,6 +201,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
     }
     
+
+    function displayCoords(e) {
+        testText.innerHTML = getCellPosX(e) + " " + getCellPosY(e);
+
+    }
+
+
     canvas.addEventListener('mousedown', function(e) {
         if (e.ctrlKey) {
             let x = getCellPosX(e);
