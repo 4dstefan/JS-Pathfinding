@@ -6,7 +6,7 @@
 
 `Ctrl + Left Click`: Find path from top left using breadth-first-search
 
-If inputting custom cell size, value should be divisible by 400
+If inputting custom cell size, 400 should be divisible by your new value
 
 ### TODO:
 - Implement maze generation algorithm(s)
