@@ -22,6 +22,11 @@ class Vertex {
     }
 }
 
+function convertedGraph(graph){
+    width = graph.length
+
+}
+
 function getPath(target) {
     let path = []
     for (let vertex = target; vertex != -1; vertex = vertex.previous) {
@@ -65,7 +70,7 @@ function bfs(graph, start) {
     return path
 }
 
-function getUnvisitedNeighbours(vertex) {
+function getUnvisitedNeighbours(vertex) { //possibly useless
     let unvisitedNeighboursArray = [];
     vertex.getNeighbours().forEach(neighbour => {
         if (!neighbour.visited) {
@@ -76,14 +81,49 @@ function getUnvisitedNeighbours(vertex) {
     return unvisitedNeighboursArray;
 }
 
+function touched(targetVertex, exceptionVertex) {
+    targetVertex.getNeighbours().forEach(neighbour => {
+        if (neighbour.visited && (neighbour !== exceptionVertex)){
+            return true;
+        }
+    });
+    return false;
+}
+
+function getUntouchedNeighbours(vertex) {
+    let untouchedNeighboursArray = []
+    vertex.getNeighbours().forEach(neighbour => {
+        if (!touched(neighbour, vertex)) {
+            untouchedNeighboursArray.push(neighbour);
+        }
+    });
+    return untouchedNeighboursArray;
+}
+
 function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function specialVisit(graph, vertex) { //possibly useless
+    vertex.visited = true;
+    try {
+        graph[vertex.value[0]+1][vertex.value[1]].visited = true;
+    } catch (error) { }
+    try {
+        graph[vertex.value[0]-1][vertex.value[1]].visited = true;
+    } catch (error) { }
+    try {
+        graph[vertex.value[0]][vertex.value[1]+1].visited = true;
+    } catch (error) { }
+    try {
+        graph[vertex.value[0]][vertex.value[1]-1].visited = true;
+    } catch (error) { }
+}
+
 function randomDFS(graph, start) {
-    resetGraph(graph) // you have to make it all walls
+    resetGraph(graph); // you have to make it all walls
 
     let stack = [];
     
@@ -95,12 +135,13 @@ function randomDFS(graph, start) {
     while (stack.length != 0) {
         let current = stack.pop();
 
-        let unvisitedNeighbours = getUnvisitedNeighbours(current);
-        if (unvisitedNeighbours.length > 0) {
+        let untouchedNeighbours = getUntouchedNeighbours(current); // all show as visited idk
+        if (untouchedNeighbours.length > 0) {
             stack.push(current);
-            randNeighbour = unvisitedNeighbours[getRandomInt(0, unvisitedNeighbours.length-1)]
-            path.push(current)
-            path.push(randNeighbour)
+            randNeighbour = untouchedNeighbours[getRandomInt(0, untouchedNeighbours.length-1)]
+            path.push(current);
+            path.push(randNeighbour);
+            console.log(randNeighbour.value)
             randNeighbour.visited = true;
             stack.push(randNeighbour);
         }
@@ -122,17 +163,20 @@ document.addEventListener('DOMContentLoaded', function() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'black';
     
-    let pixelSize = 8;
+    let pixelSize = 20;
     
     const rect = canvas.getBoundingClientRect();
     
-    let graph = createGraph(pixelSize);
+    // let graph = createGraph(pixelSize);
+    let graph = createGraph(canvas.width / pixelSize);
 
-    mazeWalls = randomDFS(graph, graph[0][0]);
 
-    mazeWalls.forEach(cell => {
-        addWall(cell.value[0], cell.value[1])
-    }); // FIX THIS LATER. SHOULD NOT BE WALLS, BUT PATH
+    // mazeWalls = randomDFS(graph, graph[1][1]);
+    // console.log(mazeWalls);
+
+    // mazeWalls.forEach(cell => {
+    //     addWall(cell.value[0], cell.value[1])
+    // }); // FIX THIS LATER. SHOULD NOT BE WALLS, BUT PATH
 
     let isDrawing = false;
     
@@ -148,15 +192,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function createGraph(pixelSize) {
-        let gridPixelWidth = canvas.width / pixelSize;
-        let newGraph = Array(gridPixelWidth);
-        for (let i = 0; i < gridPixelWidth; i++) {
-            newGraph[i] = Array(gridPixelWidth)
+    function createGraph(gridCellsWidth) {
+        let newGraph = Array(gridCellsWidth);
+        for (let i = 0; i < gridCellsWidth; i++) {
+            newGraph[i] = Array(gridCellsWidth)
         }
         
-        for (let i = 0; i < gridPixelWidth; i++) {
-            for (let j = 0; j < gridPixelWidth; j++) {
+        for (let i = 0; i < gridCellsWidth; i++) {
+            for (let j = 0; j < gridCellsWidth; j++) {
                 const value = Array(2);
                 value[0] = i;
                 value[1] = j;
@@ -167,14 +210,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         
-        for (let i = 0; i < gridPixelWidth; i++) {
-            for (let j = 0; j < gridPixelWidth; j++) {
-                if (j+1 < gridPixelWidth){
+        for (let i = 0; i < gridCellsWidth; i++) {
+            for (let j = 0; j < gridCellsWidth; j++) {
+                if (j+1 < gridCellsWidth){
                     let n1 = newGraph[i][j+1];
                     newGraph[i][j].addNeighbour(n1);
                 }
 
-                if (i+1 < gridPixelWidth) {
+                if (i+1 < gridCellsWidth) {
                     let n2 = newGraph[i+1][j];
                     newGraph[i][j].addNeighbour(n2);
                 }
@@ -195,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (newPixelSize) {
             pixelSize = newPixelSize;
-            graph = createGraph(pixelSize);
+            graph = createGraph(canvas.width / pixelSize);
         }
         pixelSizeInput.value = null;
         
