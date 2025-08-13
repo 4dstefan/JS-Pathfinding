@@ -128,45 +128,10 @@ function getUnvisitedNeighbours(vertex) { //possibly useless
     return unvisitedNeighboursArray;
 }
 
-function touched(targetVertex, exceptionVertex) {
-    targetVertex.getNeighbours().forEach(neighbour => {
-        if (neighbour.visited && (neighbour !== exceptionVertex)){
-            return true;
-        }
-    });
-    return false;
-}
-
-function getUntouchedNeighbours(vertex) {
-    let untouchedNeighboursArray = []
-    vertex.getNeighbours().forEach(neighbour => {
-        if (!touched(neighbour, vertex)) {
-            untouchedNeighboursArray.push(neighbour);
-        }
-    });
-    return untouchedNeighboursArray;
-}
-
 function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function specialVisit(graph, vertex) { //possibly useless
-    vertex.visited = true;
-    try {
-        graph[vertex.value[0]+1][vertex.value[1]].visited = true;
-    } catch (error) { }
-    try {
-        graph[vertex.value[0]-1][vertex.value[1]].visited = true;
-    } catch (error) { }
-    try {
-        graph[vertex.value[0]][vertex.value[1]+1].visited = true;
-    } catch (error) { }
-    try {
-        graph[vertex.value[0]][vertex.value[1]-1].visited = true;
-    } catch (error) { }
 }
 
 function randomDFS(graph, start) {
