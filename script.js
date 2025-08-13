@@ -58,8 +58,6 @@ function createGraph(gridCellsWidth) {
 }
 
 function reduceGraph(graph){
-    // reduced size to account for the fact that half of cells will be walls
-    // graph node maps on to every other pixel cell (probably?)
     width = Math.floor(graph.length / 2)
     
     return createGraph(width);
@@ -117,7 +115,7 @@ function bfs(graph, start) {
     return path
 }
 
-function getUnvisitedNeighbours(vertex) { //possibly useless
+function getUnvisitedNeighbours(vertex) {
     let unvisitedNeighboursArray = [];
     vertex.getNeighbours().forEach(neighbour => {
         if (!neighbour.visited) {
@@ -181,7 +179,6 @@ function getAllBetweenPositions(graph, vertexPath) {
     vertexPath.forEach(vertex => {
         path.push(vertex);
         if (vertex.previous != -1) {
-            // somehow include previous. previous is always -1
             betweenPos = getValueBetween(vertex, vertex.previous);
             path.push(graph[betweenPos[0]][betweenPos[1]]);
             path.push(vertex.previous);
@@ -236,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fillWalls(graph);
 
         filledPathTree.forEach(vertex => {
-            removePixel(vertex.value[0], vertex.value[1])
+            removeWall(vertex.value[0], vertex.value[1])
         });
     }
     
@@ -292,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         else if (e.altKey) {
             isDrawing = true;
-            removePixelAtMouse(e)
+            removeWallAtMouse(e)
         }
         else {
             isDrawing = true;
@@ -303,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle mouse move while dragging
     canvas.addEventListener('mousemove', function(e) {
         if (isDrawing & e.altKey) {
-            removePixelAtMouse(e)
+            removeWallAtMouse(e)
         }
         else if (isDrawing) {
             drawWallAtMouse(e);
@@ -320,14 +317,14 @@ document.addEventListener('DOMContentLoaded', function() {
         isDrawing = false;
     });
     
-    function removePixelAtMouse(e) {
+    function removeWallAtMouse(e) {
         const cellPositionX = getCellPosX(e);
         const cellPositionY =  getCellPosY(e);
         
-        removePixel(cellPositionX, cellPositionY);
+        removeWall(cellPositionX, cellPositionY);
     }
     
-    function removePixel(x, y) { //change name to wall
+    function removeWall(x, y) {
         graph[x][y].removed = false;
         
         ctx.fillStyle = 'white';
