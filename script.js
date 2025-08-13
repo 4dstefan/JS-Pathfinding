@@ -170,7 +170,7 @@ function specialVisit(graph, vertex) { //possibly useless
 }
 
 function randomDFS(graph, start) {
-    resetGraph(graph); // you have to make it all walls
+    resetGraph(graph);
 
     let stack = [];
     
@@ -187,7 +187,7 @@ function randomDFS(graph, start) {
             stack.push(current);
             randNeighbour = unvisitedNeighbours[getRandomInt(0, unvisitedNeighbours.length-1)]
             path.push(current)
-            // path.push(randNeighbour)
+            path.push(randNeighbour)
             randNeighbour.visited = true;
             randNeighbour.previous = current;
             stack.push(randNeighbour);
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'black';
     
-    let pixelSize = 20;
+    let pixelSize = 10;
     
     const rect = canvas.getBoundingClientRect();
     
