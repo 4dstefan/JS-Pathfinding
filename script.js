@@ -22,9 +22,54 @@ class Vertex {
     }
 }
 
-function convertedGraph(graph){
-    width = graph.length
+function createGraph(gridCellsWidth) {
+    let newGraph = Array(gridCellsWidth);
+    for (let i = 0; i < gridCellsWidth; i++) {
+        newGraph[i] = Array(gridCellsWidth)
+    }
+    
+    for (let i = 0; i < gridCellsWidth; i++) {
+        for (let j = 0; j < gridCellsWidth; j++) {
+            const value = Array(2);
+            value[0] = i;
+            value[1] = j;
+            
+            const vertex = new Vertex(value);
+            newGraph[i][j] = vertex;
+        }
+    }
+    
+    
+    for (let i = 0; i < gridCellsWidth; i++) {
+        for (let j = 0; j < gridCellsWidth; j++) {
+            if (j+1 < gridCellsWidth){
+                let n1 = newGraph[i][j+1];
+                newGraph[i][j].addNeighbour(n1);
+            }
+            
+            if (i+1 < gridCellsWidth) {
+                let n2 = newGraph[i+1][j];
+                newGraph[i][j].addNeighbour(n2);
+            }
+        }
+    }
+    
+    return newGraph;
+}
 
+function reduceGraph(graph){
+    // reduced size to account for the fact that half of cells will be walls
+    // graph node maps on to every other pixel cell (probably?)
+    width = Math.floor(graph.length / 2)
+    
+    return createGraph(width);
+}
+
+function convertNodePosition(posArray) {
+    let x = (posArray[0]+1)*2 - 1;
+    let y = (posArray[1]+1)*2 - 1;
+
+    return [x,y];
 }
 
 function getPath(target) {
@@ -44,6 +89,8 @@ function resetGraph(graph, walls=false) {
         });
     });
 }
+
+
 
 function bfs(graph, start) {
     resetGraph(graph)
@@ -77,7 +124,7 @@ function getUnvisitedNeighbours(vertex) { //possibly useless
             unvisitedNeighboursArray.push(neighbour);
         }
     });
-
+    
     return unvisitedNeighboursArray;
 }
 
@@ -135,19 +182,54 @@ function randomDFS(graph, start) {
     while (stack.length != 0) {
         let current = stack.pop();
 
-        let untouchedNeighbours = getUntouchedNeighbours(current); // all show as visited idk
-        if (untouchedNeighbours.length > 0) {
+        let unvisitedNeighbours = getUnvisitedNeighbours(current);
+        if (unvisitedNeighbours.length > 0) {
             stack.push(current);
-            randNeighbour = untouchedNeighbours[getRandomInt(0, untouchedNeighbours.length-1)]
-            path.push(current);
-            path.push(randNeighbour);
-            console.log(randNeighbour.value)
+            randNeighbour = unvisitedNeighbours[getRandomInt(0, unvisitedNeighbours.length-1)]
+            path.push(current)
+            // path.push(randNeighbour)
             randNeighbour.visited = true;
+            randNeighbour.previous = current;
             stack.push(randNeighbour);
         }
     }
 
     return path;
+}
+
+function expandedPath(graph, reducedPath) {
+    let path = [];
+    reducedPath.forEach(vertex => {
+        let newValue = convertNodePosition(vertex.value);
+        let newVertex = graph[newValue[0]][newValue[1]];
+        if (vertex.previous != -1) {
+            let newPrevNode = convertNodePosition(vertex.previous.value);
+            newVertex.previous = graph[newPrevNode[0]][newPrevNode[1]];
+        }
+        path.push(newVertex);
+    });
+    return path;
+}
+
+function getAllBetweenPositions(graph, vertexPath) {
+    let path = [];
+    vertexPath.forEach(vertex => {
+        path.push(vertex);
+        if (vertex.previous != -1) {
+            // somehow include previous. previous is always -1
+            betweenPos = getValueBetween(vertex, vertex.previous);
+            path.push(graph[betweenPos[0]][betweenPos[1]]);
+            path.push(vertex.previous);
+        }
+    });
+    return path;
+}
+
+function getValueBetween(vertex1, vertex2) {
+    let x = (vertex1.value[0] + vertex2.value[0]) / 2
+    let y = (vertex1.value[1] + vertex2.value[1]) / 2
+
+    return [x, y]
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -167,17 +249,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const rect = canvas.getBoundingClientRect();
     
-    // let graph = createGraph(pixelSize);
     let graph = createGraph(canvas.width / pixelSize);
+    
+    let reducedGraph = reduceGraph(graph);
+
+    let reducedPathTree = randomDFS(reducedGraph, reducedGraph[0][0])
+
+    console.log(reducedPathTree);
+
+    pathTree = expandedPath(graph, reducedPathTree);
+    filledPathTree = getAllBetweenPositions(graph, pathTree);
+    console.log(filledPathTree);
 
 
-    // mazeWalls = randomDFS(graph, graph[1][1]);
-    // console.log(mazeWalls);
-
-    // mazeWalls.forEach(cell => {
-    //     addWall(cell.value[0], cell.value[1])
-    // }); // FIX THIS LATER. SHOULD NOT BE WALLS, BUT PATH
-
+    filledPathTree.forEach(vertex => {
+        addWall(vertex.value[0], vertex.value[1])
+    });
+    
     let isDrawing = false;
     
     document.addEventListener('mousedown', displayCoords);
@@ -192,42 +280,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    function createGraph(gridCellsWidth) {
-        let newGraph = Array(gridCellsWidth);
-        for (let i = 0; i < gridCellsWidth; i++) {
-            newGraph[i] = Array(gridCellsWidth)
-        }
-        
-        for (let i = 0; i < gridCellsWidth; i++) {
-            for (let j = 0; j < gridCellsWidth; j++) {
-                const value = Array(2);
-                value[0] = i;
-                value[1] = j;
-                
-                const vertex = new Vertex(value);
-                newGraph[i][j] = vertex;
-            }
-        }
-        
-        
-        for (let i = 0; i < gridCellsWidth; i++) {
-            for (let j = 0; j < gridCellsWidth; j++) {
-                if (j+1 < gridCellsWidth){
-                    let n1 = newGraph[i][j+1];
-                    newGraph[i][j].addNeighbour(n1);
-                }
-
-                if (i+1 < gridCellsWidth) {
-                    let n2 = newGraph[i+1][j];
-                    newGraph[i][j].addNeighbour(n2);
-                }
-            }
-        }
-
-        return newGraph;
-    }
     
-
+    
+    
     function resetCanvas() {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -244,13 +299,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
     }
     
-
+    
     function displayCoords(e) {
         testText.innerHTML = getCellPosX(e) + " " + getCellPosY(e);
-
+        
     }
-
-
+    
+    
     canvas.addEventListener('mousedown', function(e) {
         if (e.ctrlKey) {
             let x = getCellPosX(e);
@@ -259,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         else if (e.altKey) {
             isDrawing = true;
-            removePixel(e)
+            removePixelAtMouse(e)
         }
         else {
             isDrawing = true;
@@ -270,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle mouse move while dragging
     canvas.addEventListener('mousemove', function(e) {
         if (isDrawing & e.altKey) {
-            removePixel(e)
+            removePixelAtMouse(e)
         }
         else if (isDrawing) {
             drawWallAtMouse(e);
@@ -287,28 +342,29 @@ document.addEventListener('DOMContentLoaded', function() {
         isDrawing = false;
     });
     
-    function removePixel(e) {
-        const x = getCellPosX(e) * pixelSize;
-        const y = getCellPosY(e) * pixelSize;
+    function removePixelAtMouse(e) {
+        const cellPositionX = getCellPosX(e);
+        const cellPositionY =  getCellPosY(e);
         
-        let graphx = getCellPosX(e);
-        let graphy = getCellPosY(e);
-        
-        graph[graphx][graphy].removed = false;
+        removePixel(cellPositionX, cellPositionY);
+    }
+
+    function removePixel(x, y) { //change name to wall
+        graph[x][y].removed = false;
         
         ctx.fillStyle = 'white';
         
-        ctx.fillRect(x, y, pixelSize, pixelSize);
+        ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
     }
-
+    
     function getCellPosX(e) {
         return Math.floor((e.clientX - rect.left) / pixelSize);
     }
-
+    
     function getCellPosY(e) {
         return Math.floor((e.clientY - rect.top) / pixelSize);
     }
-
+    
     function addWall(x, y) {
         graph[x][y].removed = true;
         
@@ -319,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function drawWallAtMouse(e) {
         const cellPositionX = getCellPosX(e);
         const cellPositionY =  getCellPosY(e);
-
+        
         addWall(cellPositionX, cellPositionY);
         
     }
