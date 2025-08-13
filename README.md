@@ -6,7 +6,7 @@
 
 `Ctrl + Left Click`: Find path from top left using breadth-first-search
 
-If inputting custom cell size, 400 should be divisible by your new value
+Inputting a custom cell size will only work if the size of the canvas is divisible by your number so tbh don't bother unless you do the math
 
 ### TODO:
 - Implement maze generation algorithm(s)

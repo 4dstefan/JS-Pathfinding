@@ -68,7 +68,7 @@ function reduceGraph(graph){
 function convertNodePosition(posArray) {
     let x = (posArray[0]+1)*2 - 1;
     let y = (posArray[1]+1)*2 - 1;
-
+    
     return [x,y];
 }
 
@@ -81,7 +81,7 @@ function getPath(target) {
     return path;
 }
 
-function resetGraph(graph, walls=false) {
+function resetGraph(graph) {
     graph.forEach(row => {
         row.forEach(vertex => {
             vertex.visited = false;
@@ -136,17 +136,17 @@ function getRandomInt(min, max) {
 
 function randomDFS(graph, start) {
     resetGraph(graph);
-
+    
     let stack = [];
     
     start.visited = true;
     stack.push(start);
-
+    
     let path = [];
-
+    
     while (stack.length != 0) {
         let current = stack.pop();
-
+        
         let unvisitedNeighbours = getUnvisitedNeighbours(current);
         if (unvisitedNeighbours.length > 0) {
             stack.push(current);
@@ -158,7 +158,7 @@ function randomDFS(graph, start) {
             stack.push(randNeighbour);
         }
     }
-
+    
     return path;
 }
 
@@ -193,7 +193,7 @@ function getAllBetweenPositions(graph, vertexPath) {
 function getValueBetween(vertex1, vertex2) {
     let x = (vertex1.value[0] + vertex2.value[0]) / 2
     let y = (vertex1.value[1] + vertex2.value[1]) / 2
-
+    
     return [x, y]
 }
 
@@ -201,6 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     var resetButton = document.getElementById("resetButton");
     resetButton.addEventListener("click", resetCanvas, false);
+    
+    var mazeButton = document.getElementById("mazeButton");
+    mazeButton.addEventListener("click", addMaze, false);
     
     const testText = document.getElementById('test');
     const canvas = document.getElementById('pixelCanvas');
@@ -216,28 +219,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let graph = createGraph(canvas.width / pixelSize);
     
-    let reducedGraph = reduceGraph(graph);
 
-    let reducedPathTree = randomDFS(reducedGraph, reducedGraph[0][0])
-
-    console.log(reducedPathTree);
-
-    pathTree = expandedPath(graph, reducedPathTree);
-    filledPathTree = getAllBetweenPositions(graph, pathTree);
-    console.log(filledPathTree);
-
-
-    filledPathTree.forEach(vertex => {
-        addWall(vertex.value[0], vertex.value[1])
-    });
-    
     let isDrawing = false;
     
     document.addEventListener('mousedown', displayCoords);
     
+    function addMaze() {
+        resetCanvas();
+        let reducedGraph = reduceGraph(graph);
+        
+        let reducedPathTree = randomDFS(reducedGraph, reducedGraph[0][0])
+        
+        pathTree = expandedPath(graph, reducedPathTree);
+        filledPathTree = getAllBetweenPositions(graph, pathTree);        
+        
+        fillWalls(graph);
+
+        filledPathTree.forEach(vertex => {
+            removePixel(vertex.value[0], vertex.value[1])
+        });
+    }
     
     function drawPath(x, y) {
-        bfs(graph, graph[0][0]);
+        start = graph[1][1]
+        bfs(graph, start);
         let path = getPath(graph[x][y]);
         path.forEach(vertex => {
             ctx.fillStyle = 'lime';
@@ -246,7 +251,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     
-    
+    function fillWalls(graph) {
+        graph.forEach(row => {
+            row.forEach(vertex => {
+                addWall(vertex.value[0], vertex.value[1])
+            });
+        });
+    }
     
     function resetCanvas() {
         ctx.fillStyle = 'white';
@@ -256,11 +267,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var pixelSizeInput = document.getElementById("pixelSize");
         let newPixelSize = pixelSizeInput.value
         
-        if (newPixelSize) {
+        let newWidth = canvas.width / newPixelSize;
+        if (Number.isInteger(newWidth)) {
             pixelSize = newPixelSize;
-            graph = createGraph(canvas.width / pixelSize);
         }
-        pixelSizeInput.value = null;
+        graph = createGraph(canvas.width / pixelSize);
+
+        pixelSizeInput.value = "";
         
     }
     
@@ -313,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         removePixel(cellPositionX, cellPositionY);
     }
-
+    
     function removePixel(x, y) { //change name to wall
         graph[x][y].removed = false;
         

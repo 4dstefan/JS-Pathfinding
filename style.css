@@ -35,6 +35,20 @@ body {
   border-radius: 5px;
   margin: 0px;
 }
+#mazeButton {
+  background-color: #000f71;
+  border: none;
+  color: white;
+  /* padding: 15px 32px; */
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  /* font-size: 16px; */
+  width: 100px;
+  height: 40px;
+  border-radius: 5px;
+  margin: 0px;
+}
 
 canvas {
     border: 1px solid #000;
